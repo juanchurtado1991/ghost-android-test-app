@@ -1,7 +1,6 @@
 package com.ghost.android.test.data
 
 import com.ghost.android.test.domain.RickAndMortyResponse
-import com.ghost.serialization.generated.GhostModuleRegistry_app
 import com.ghost.serialization.retrofit.GhostConverterFactory
 import retrofit2.Retrofit
 import retrofit2.http.GET
@@ -14,11 +13,10 @@ interface RickAndMortyGhostService {
 
 object GhostRetrofitClient {
     private const val BASE_URL = "https://rickandmortyapi.com/api/"
-    private val registry = GhostModuleRegistry_app.INSTANCE
 
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
-        .addConverterFactory(GhostConverterFactory.create(registry))
+        .addConverterFactory(GhostConverterFactory.create())
         .build()
 
     val service: RickAndMortyGhostService = retrofit.create(RickAndMortyGhostService::class.java)

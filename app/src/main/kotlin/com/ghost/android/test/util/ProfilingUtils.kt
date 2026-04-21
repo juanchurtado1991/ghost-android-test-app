@@ -10,7 +10,7 @@ fun forceGC() {
     System.gc()
     Runtime.getRuntime().gc()
     // Small delay to let GC work
-    try { Thread.sleep(100) } catch (e: Exception) {}
+    try { Thread.sleep(20) } catch (e: Exception) {}
 }
 
 /**
