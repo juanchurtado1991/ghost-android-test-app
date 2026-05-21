@@ -2,9 +2,7 @@
 
 This is the official testing laboratory for **Ghost Serialization** in Android environments. It serves as both a performance validation tool and a blueprint for production-grade integrations on Android.
 
-**Ghost version:** `1.1.16` from [Maven Central](https://central.sonatype.com/search?q=g:com.ghostserializer).
-
-> **This project is standalone.** It resolves Ghost entirely from Maven Central — no local checkout of `ghost-serializer` or `mavenLocal()` required. Clone, open in Android Studio, and run on a device or emulator.
+**Ghost version:** `1.1.17` from [Maven Central](https://central.sonatype.com/search?q=g:com.ghostserializer) (`com.ghostserializer`). Clone and build — no local checkout of [ghost-serializer](https://github.com/juanchurtado1991/ghost-serializer) required.
 
 **Related projects:**
 
@@ -19,7 +17,7 @@ This is the official testing laboratory for **Ghost Serialization** in Android e
 ## 🚀 How to Run the Benchmark
 
 1. Clone this repository.
-2. Open the project in Android Studio.
+2. Open the project in Android Studio (Gradle resolves Ghost **1.1.17** from Maven Central).
 3. Use a physical device or emulator (API 24+).
 4. Select the `app` module and run **Run** (or `./gradlew :app:assembleDebug`).
 5. Adjust the stress load (e.g. **20 pages**).
@@ -37,7 +35,7 @@ This is the official testing laboratory for **Ghost Serialization** in Android e
 
 > **Coordinates:** Maven artifacts use `com.ghostserializer`. Kotlin imports use `com.ghost.serialization` (package namespace).
 
-### Maven Central artifacts (`1.1.16`)
+### Ghost artifacts (`1.1.17` on Maven Central)
 
 | Artifact | Purpose |
 |:---|:---|
@@ -52,7 +50,7 @@ This is the official testing laboratory for **Ghost Serialization** in Android e
 
 ```toml
 [versions]
-ghost = "1.1.16"
+ghost = "1.1.17"
 
 [plugins]
 ghost = { id = "com.ghostserializer.ghost", version.ref = "ghost" }
@@ -63,7 +61,7 @@ ghost = { id = "com.ghostserializer.ghost", version.ref = "ghost" }
 ```kotlin
 pluginManagement {
     repositories {
-        mavenCentral()      // Ghost plugin marker lives here
+        mavenCentral()
         google()
         gradlePluginPortal()
     }
@@ -93,7 +91,7 @@ plugins {
 }
 
 ghost {
-    version.set(libs.versions.ghost.get()) // 1.1.16
+    version.set(libs.versions.ghost.get()) // 1.1.17
     autoInjectKtor.set(false) // Ktor 3: this app uses GhostKtor3Converter (see below)
 }
 
@@ -208,10 +206,10 @@ Both platforms beat the platform-native serializer in their respective benchmark
 
 ## Troubleshooting
 
-**Plugin `1.1.16` not found:** Sonatype can show PUBLISHED before `repo.maven.apache.org` syncs. Check:
+**Plugin `1.1.17` not found:** Sonatype can show PUBLISHED before `repo.maven.apache.org` syncs. Verify the version is on Maven:
 
 ```bash
-curl -s https://repo.maven.apache.org/maven2/com/ghostserializer/ghost/com.ghostserializer.ghost.gradle.plugin/maven-metadata.xml | grep 1.1.16
+curl -s https://repo.maven.apache.org/maven2/com/ghostserializer/ghost/com.ghostserializer.ghost.gradle.plugin/maven-metadata.xml | grep 1.1.17
 ```
 
 Then: `./gradlew --stop && ./gradlew :app:assembleDebug --refresh-dependencies`.
