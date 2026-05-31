@@ -2,7 +2,7 @@
 
 This is the official testing laboratory for **Ghost Serialization** in Android environments. It serves as both a performance validation tool and a blueprint for production-grade integrations on Android.
 
-**Ghost version:** `1.1.17` from [Maven Central](https://central.sonatype.com/search?q=g:com.ghostserializer) (`com.ghostserializer`). Clone and build — no local checkout of [ghost-serializer](https://github.com/juanchurtado1991/ghost-serializer) required.
+**Ghost version:** `1.2.0` from [Maven Central](https://central.sonatype.com/search?q=g:com.ghostserializer) (`com.ghostserializer`). Clone and build — no local checkout of [ghost-serializer](https://github.com/juanchurtado1991/ghost-serializer) required.
 
 **Related projects:**
 
@@ -17,7 +17,7 @@ This is the official testing laboratory for **Ghost Serialization** in Android e
 ## 🚀 How to Run the Benchmark
 
 1. Clone this repository.
-2. Open the project in Android Studio (Gradle resolves Ghost **1.1.17** from Maven Central).
+2. Open the project in Android Studio (Gradle resolves Ghost **1.2.0** from Maven Central).
 3. Use a physical device or emulator (API 24+).
 4. Select the `app` module and run **Run** (or `./gradlew :app:assembleDebug`).
 5. Adjust the stress load (e.g. **20 pages**).
@@ -35,7 +35,7 @@ This is the official testing laboratory for **Ghost Serialization** in Android e
 
 > **Coordinates:** Maven artifacts use `com.ghostserializer`. Kotlin imports use `com.ghost.serialization` (package namespace).
 
-### Ghost artifacts (`1.1.17` on Maven Central)
+### Ghost artifacts (`1.2.0` on Maven Central)
 
 | Artifact | Purpose |
 |:---|:---|
@@ -50,7 +50,7 @@ This is the official testing laboratory for **Ghost Serialization** in Android e
 
 ```toml
 [versions]
-ghost = "1.1.17"
+ghost = "1.2.0"
 
 [plugins]
 ghost = { id = "com.ghostserializer.ghost", version.ref = "ghost" }
@@ -91,7 +91,7 @@ plugins {
 }
 
 ghost {
-    version.set(libs.versions.ghost.get()) // 1.1.17
+    version.set(libs.versions.ghost.get()) // 1.2.0
     autoInjectKtor.set(false) // Ktor 3: this app uses GhostKtor3Converter (see below)
 }
 
@@ -106,12 +106,30 @@ On Android/JVM, registry discovery is automatic after code generation — call `
 
 ```kotlin
 import com.ghost.serialization.retrofit.GhostConverterFactory
+import com.ghost.serialization.annotations.GhostStrict
+import com.ghost.serialization.annotations.GhostCoerce
 import retrofit2.Retrofit
 
 val retrofit = Retrofit.Builder()
     .baseUrl("https://api.example.com/")
     .addConverterFactory(GhostConverterFactory.create())
     .build()
+
+interface UserApi {
+    // 1. Lenient (Default): Bypasses all bitwise comma validation for maximum par speed (same as 1.1.20)
+    @GET("users/lenient")
+    suspend fun getStandardUsers(): List<User>
+
+    // 2. Strict Comma & Format Validation: Enforces correct comma placements and rejects trailing commas
+    @GhostStrict
+    @GET("users/strict")
+    suspend fun getStrictUsers(): List<User>
+
+    // 3. Coercion: Automatically parses stringified values (e.g. "42", "true") into primitive fields
+    @GhostCoerce
+    @GET("users/coerce")
+    suspend fun getCoercedUsers(): List<User>
+}
 ```
 
 ### 3. Ktor 2.x (official adapter)
@@ -123,7 +141,18 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 
 val client = HttpClient {
     install(ContentNegotiation) {
-        ghost()
+        ghost() // registers Ghost as the JSON engine (Default: lenient)
+    }
+}
+
+// Or configure strict mode & coercion dynamically for your KMP client:
+val strictClient = HttpClient {
+    install(ContentNegotiation) {
+        ghost { reader ->
+            reader.strictMode = true
+            reader.coerceStringsToNumbers = true
+            reader.coerceBooleans = true
+        }
     }
 }
 ```
@@ -155,38 +184,39 @@ Full library docs: [ghost-serializer README](https://github.com/juanchurtado1991
 
 | Engine | Operation | Mode | Avg latency | Avg memory |
 |:---|:---|:---|:---:|:---:|
-| **Gson** | Network | Retrofit | 7.52 ms | 883 KB |
-| **Moshi** | Network | Retrofit | 7.72 ms | 695 KB |
-| **KSer** | Network | Ktorfit | 16.10 ms | 2438 KB |
-| **Ghost** | Network | Retrofit | **5.70 ms** | **683 KB** |
-| **Gson** | Read | String | 5.98 ms | 693 KB |
-| **Moshi** | Read | String | 7.79 ms | 687 KB |
-| **KSer** | Read | String | 9.71 ms | 628 KB |
-| **Ghost** | Read | String | **4.70 ms** | **506 KB** |
-| **Gson** | Read | Bytes | 6.42 ms | 1084 KB |
-| **Moshi** | Read | Bytes | 8.19 ms | 1077 KB |
-| **KSer** | Read | Bytes | 10.18 ms | 1019 KB |
-| **Ghost** | Read | Bytes | **4.18 ms** | **303 KB** |
-| **Gson** | Read | Stream | 6.45 ms | 714 KB |
-| **Moshi** | Read | Stream | 6.12 ms | 685 KB |
-| **KSer** | Read | Stream | 10.15 ms | 1020 KB |
-| **Ghost** | Read | Stream | **4.42 ms** | **675 KB** |
-| **Gson** | Write | String | 10.93 ms | 1694 KB |
-| **Moshi** | Write | String | 9.61 ms | 1130 KB |
-| **KSer** | Write | String | 4.92 ms | 447 KB |
-| **Ghost** | Write | String | **4.13 ms** | **428 KB** |
-| **Gson** | Write | Bytes | 9.13 ms | 1886 KB |
-| **Moshi** | Write | Bytes | 8.61 ms | 1314 KB |
-| **KSer** | Write | Bytes | 3.43 ms | 634 KB |
-| **Ghost** | Write | Bytes | **2.22 ms** | **220 KB** |
-| **Gson** | Write | Buffer | 10.35 ms | 1856 KB |
-| **Moshi** | Write | Buffer | 8.59 ms | 544 KB |
-| **Ghost** | Write | Buffer | **2.22 ms** | **191 KB** |
+| **Gson** | Network | Retrofit | 1.60 ms | 708 KB |
+| **Moshi** | Network | Retrofit | 2.30 ms | 615 KB |
+| **KSer** | Network | Ktorfit | 2.96 ms | 2455 KB |
+| **Ghost** | Network | Retrofit | **1.18 ms** | **345 KB** |
+| **Ghost** | Network | Ktorfit | **1.32 ms** | **1105 KB** |
+| **Gson** | Read | String | 1.47 ms | 504 KB |
+| **Moshi** | Read | String | 2.17 ms | 603 KB |
+| **KSer** | Read | String | 1.78 ms | 614 KB |
+| **Ghost** | Read | String | **1.20 ms** | **367 KB** |
+| **Gson** | Read | Bytes | 1.80 ms | 902 KB |
+| **Moshi** | Read | Bytes | 2.53 ms | 1004 KB |
+| **KSer** | Read | Bytes | 2.13 ms | 1012 KB |
+| **Ghost** | Read | Bytes | **0.79 ms** | **172 KB** |
+| **Gson** | Read | Stream | 1.87 ms | 526 KB |
+| **Moshi** | Read | Stream | 2.08 ms | 608 KB |
+| **KSer** | Read | Stream | 2.28 ms | 1017 KB |
+| **Ghost** | Read | Stream | **0.89 ms** | **340 KB** |
+| **Gson** | Write | String | 2.62 ms | 1704 KB |
+| **Moshi** | Write | String | 2.23 ms | 1119 KB |
+| **KSer** | Write | String | 0.96 ms | 428 KB |
+| **Ghost** | Write | String | **0.93 ms** | **421 KB** |
+| **Gson** | Write | Bytes | 3.03 ms | 1890 KB |
+| **Moshi** | Write | Bytes | 2.71 ms | 1306 KB |
+| **KSer** | Write | Bytes | 1.36 ms | 628 KB |
+| **Ghost** | Write | Bytes | **0.69 ms** | **218 KB** |
+| **Gson** | Write | Buffer | 2.96 ms | 1858 KB |
+| **Moshi** | Write | Buffer | 2.00 ms | 542 KB |
+| **Ghost** | Write | Buffer | **0.67 ms** | **189 KB** |
 
 ### Key takeaways
 
 - Ghost wins every category vs Gson, Moshi, and kotlinx.serialization in this suite.
-- Byte writes: **~80% less allocation** than Gson (220 KB vs 1886 KB) — less GC pressure and UI jank on real devices.
+- Byte writes: **~80% less allocation** than Gson (218 KB vs 1890 KB) — less GC pressure and UI jank on real devices.
 - Compile-time serializers play well with **R8/ProGuard** (no reflection-based keep rules for model graphs).
 
 ---
@@ -195,10 +225,10 @@ Full library docs: [ghost-serializer README](https://github.com/juanchurtado1991
 
 | Operation | Android Ghost | [iOS Ghost](https://github.com/juanchurtado1991/ghost-ios-test-app) | Notes |
 |:---|:---:|:---:|:---|
-| Parse String | 4.70 ms | 1.54 ms | ART vs Apple Silicon |
-| Parse Bytes | 4.18 ms | 0.86 ms | |
-| Write Bytes | 2.22 ms | 0.39 ms | |
-| Network | 5.70 ms | 2.27 ms | |
+| Parse String | 1.20 ms | 1.54 ms | ART vs Apple Silicon |
+| Parse Bytes | 0.79 ms | 0.86 ms | |
+| Write Bytes | 0.69 ms | 0.39 ms | |
+| Network | 1.18 ms | 2.27 ms | |
 
 Both platforms beat the platform-native serializer in their respective benchmark apps.
 
@@ -206,10 +236,10 @@ Both platforms beat the platform-native serializer in their respective benchmark
 
 ## Troubleshooting
 
-**Plugin `1.1.17` not found:** Sonatype can show PUBLISHED before `repo.maven.apache.org` syncs. Verify the version is on Maven:
+**Plugin `1.2.0` not found:** Sonatype can show PUBLISHED before `repo.maven.apache.org` syncs. Verify the version is on Maven:
 
 ```bash
-curl -s https://repo.maven.apache.org/maven2/com/ghostserializer/ghost/com.ghostserializer.ghost.gradle.plugin/maven-metadata.xml | grep 1.1.17
+curl -s https://repo.maven.apache.org/maven2/com/ghostserializer/ghost/com.ghostserializer.ghost.gradle.plugin/maven-metadata.xml | grep 1.2.0
 ```
 
 Then: `./gradlew --stop && ./gradlew :app:assembleDebug --refresh-dependencies`.
