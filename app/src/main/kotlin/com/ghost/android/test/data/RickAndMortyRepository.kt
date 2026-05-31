@@ -151,7 +151,7 @@ class RickAndMortyRepository {
             .client(fakeClient)
             .addConverterFactory(GhostConverterFactory.create())
             .build()
-            .create(RickAndMortyGhostService::class.java)
+            .create(RickAndMortyRetrofitService::class.java)
 
         // Moshi Retrofit
         val moshiService = Retrofit.Builder()
@@ -159,7 +159,7 @@ class RickAndMortyRepository {
             .client(fakeClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
-            .create(RickAndMortyService::class.java)
+            .create(RickAndMortyRetrofitService::class.java)
 
         // Gson Retrofit
         val gsonService = Retrofit.Builder()
@@ -167,7 +167,7 @@ class RickAndMortyRepository {
             .client(fakeClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
-            .create(RickAndMortyGsonService::class.java)
+            .create(RickAndMortyRetrofitService::class.java)
 
         // KSer Ktorfit
         val kserHttpClient = HttpClient(kserFakeEngine) {

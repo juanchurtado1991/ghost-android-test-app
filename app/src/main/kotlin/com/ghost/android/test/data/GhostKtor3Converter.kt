@@ -21,7 +21,7 @@ import kotlin.reflect.KClass
  *
  * Mirrors the zero-extra-copy design of GhostConverterFactory (Retrofit):
  *  - Deserialize: acquires a pooled scratch buffer sized to DEFAULT_BUFFER_SIZE
- *    (large enough for typical multi-page payloads), reads the channel in a
+ *    (large enough for typical multipage payloads), reads the channel in a
  *    manual loop, then parses directly from that buffer and returns it to the pool.
  *    No ByteArray allocation on the hot path once the pool is warm.
  *  - Serialize: pools the GhostJsonFlatWriter via ghostInternalEncodeWithWriter;
